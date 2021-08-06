@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HCI Project Compiler</title>
+
+
+<link rel="stylesheet" href="xterm.css" />
+<script src="xterm.js"></script>
+
+
+<style type="text/css" media="screen">
+    *{
+        box-sizing: border-box;
+        margin: 0px;
+        padding: 0px;
+    }
+    .editorFrame{
+        position: relative;
+    }
+    #editor { 
+        height: 100%;
+        overflow: hidden;
+        border: 1px solid grey;
+    }
+    #compile{
+        margin: 10px 0px;
+    }
+    #console{
+        margin: 51px 0px 0px;
+        height: 20vh;
+        padding: 15px;
+        overflow-y: scroll;
+        border: 0px 1px 1px 1px solid blue;
+        background-color: black;
+        color: white;
+    }
+    #compiling{
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        border-radius: 10px;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        z-index: 5000;
+        background: grey;
+        border: 1px solid black;
+        padding: 10px;
+        text-align: left;
+        opacity: 0;
+        transition-duration: 1s;
+        width: 150px;
+    }
+    .navigation{
+        font-family: sans-serif;
+        background: #cecece;
+        overflow: hidden;
+    }
+    .navigation * {
+        box-sizing: border-box;
+    }
+    .navigation ul{
+        text-align: center;
+        height: 31px;
+    }
+    .navigation ul li{
+        list-style: none;
+        display: inline-block;
+    }
+    .navigation ul li a {
+        text-decoration: none;
+        color: black;
+        padding: 5px;
+        display: table-cell;
+        vertical-align: middle;
+        border: 1px solid #cecece;
+        height: 25px;
+    }
+    .navigation ul li a img{
+        height: -webkit-fill-available;
+    }
+    .navigation ul li a:hover{
+        background: #fffaba;
+        border: 1px solid #c7c283;
+    }
+    .filesCol{
+        border: 1px solid #808080;
+        overflow: hidden;
+        float: left;
+        width: 20%;
+        height: 65vh;
+    }
+    .filesCol .heading{
+        background: #64648e;
+        color: white;
+        font-family: sans-serif;
+        padding: 5px;
+    }
+    .filesCol .files{
+        margin-top: 10px;
+    }
+    .filesCol .files ul li{
+        padding: 5px;
+        display: block;
+        cursor: pointer;
+        height: 40px;
+        margin: 1px 0px;
+    }
+    .filesCol .files ul li:hover{
+        background: #f0f0f0;
+    }
+    .filesCol .files ul li img{
+        height: -webkit-fill-available;
+    }
+    .filesCol .files ul li .fileName{
+        display: inline-block;
+        margin-left: 5px;
+        position: relative;
+        top: -10px;
+    }
+    .contextMenu{
+        font-family: sans-serif;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+        width: 120px;
+        border:1px solid grey;
+        background: #cecece;
+        box-shadow: 2px 3px 5px grey;
+    }
+    .contextMenu ul li{
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+    .contextMenu ul li:hover{
+        background: #ededed;
+    }
+    .contextMenu ul{
+        list-style: none;
+    }
+    .messageWindow{
+        font-family: sans-serif;
+        position: fixed;
+        width: 300px;
+        background: #f0f0f0;
+        z-index: 50;
+        border: 1px solid #64648e;
+        box-shadow: 2px 3px 5px grey;
+        top: calc(50vh - 100px);
+        left: calc(50vw - 150px);
+    }
+    .messageWindow .title_close{
+        background: white;
+    }
+    .messageWindow .title{
+        display: inline-block;
+        width: calc(100% - 40px);
+        padding: 8px;
+    }
+    .messageWindow .closeButton{
+        display: inline-block;
+    }
+    .messageWindow .closeButton a{
+        display: block;
+        text-decoration: none;
+        text-align: center;
+        width: 39px;
+        padding: 8px;
+        color: black;
+        border: 1px solid white;
+    }
+    .messageWindow .closeButton a:hover{
+        background: #fffaba;
+        border: 1px solid #c7c283;
+    }
+    .messageWindow .paragraph{
+        padding: 8px;
+    }
+    .messageWindow .loadingBar{
+        position: relative;
+        left: 8px;
+        overflow: hidden;
+        width: 284px;
+        height: 25px;
+        margin: 0px 0px 8px;
+        text-align: center;
+    }
+    .messageWindow .loadingBar .loadingText{
+        color: white;
+        position: relative;
+        top: -30px;
+    }
+    .logo_user{
+        background: #ededed;
+        height: 40px;
+    }
+    .logo_user .wrapper{
+        width: 80%;
+        height: 40px;
+        margin: auto;
+    }
+    .navigation .wrapper{
+        width: 100%;
+    }
+    .logo_user .user {
+    float: right;
+    height: inherit;
+    width: 36px;
+}
+    .logo_user .user .image{
+        position: absolute;
+        text-align: center;
+    }
+    .logo_user .user a img{
+        position: relative;
+        top: 2px;
+        height: 36px;
+    }
+    .logo_user .user .dropdown{
+        position: relative;
+        top: 42px;
+        right: 18px;
+        z-index: 40;
+        width: 85px;
+        background: #f0f0f0;
+        border: 1px solid grey;
+        box-shadow: 2px 3px 5px grey;
+    }
+    .logo_user .user .dropdown ul{
+        list-style-type: none;
+    }
+    .logo_user .user .dropdown ul li a{
+        text-decoration: none;
+        color: black;
+        display: block;
+        text-align: center;
+        padding: 10px;
+        font-family: sans-serif;
+    }
+    
+    .logo_user .user .dropdown ul li a:hover{
+        background: gainsboro;
+    }
+    .logo {
+        position: relative;
+        display: inline-block;
+        top: 4px;
+    }
+    .userNameText{
+        color: black;
+        text-decoration: none;
+    }.user_profile_link{
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .gear{
+        background: #dcdcdc;
+        width: 100px;
+        margin: auto;
+        border: 1px solid black;
+        border-radius: 5px;
+        box-shadow: 2px 3px 5px black;
+        text-align: center;
+    }
+    .gear img{
+        width: inherit;
+    }
+    .gear .text{
+        font-weight: bold;
+        padding: 0px 0px 10px;
+    }.editorMainText{
+        height: 65vh;
+        overflow: hidden;
+        width: 80%;
+        border: 1px solid grey;
+        float: right;
+    }
+    .editorMainText .names{
+        background: #a6a6e0;
+        font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+        padding-left: 10px;
+    }.notification{
+        display: none;
+        position: fixed;
+        bottom: 50px;
+        background: #64648e;
+        padding: 10px 20px;
+        z-index: 999999999999999999999;
+        right: 20px;
+        width: 250px;
+        border: 1px solid black;
+        border-radius: 10px;
+        font-family: sans-serif;
+        letter-spacing: 2px;
+        color: white;
+    }
+</style>
+</head>
+<body>
+    <div class="contextMenu" style="display: none;">
+        <ul>
+            <li onclick="openFile()">Open</li>
+            <li onclick="validateDelete()">Delete</li>
+            <li onclick="showProperties()">Properties</li>
+        </ul>
+    </div>
+    <div class="notification">
+        Notification Text bla bla bla
+    </div>
+    <div class="blurBackground" style="display: none; width: 100vw;
+    height: 100vh;
+    background: grey;
+    opacity: .5;
+    z-index: 5;
+    position: absolute;
+    top: 0px;">
+    </div>
+    <div class="messageWindow" style="display: none;">
+        <div class="title_close">
+            <div class="title">Compiling</div>
+        </div>
+
+        <div class="paragraph">
+            The file is being compiled.
+        </div>
+        <div class="loadingBar">
+            <img src="loading.gif" style="position: relative; top: -5px;">
+            <div class="loadingText">Performing Action...</div>
+        </div>
+    </div>
+    <nav class="logo_user">
+        <div class="wrapper">
+            <div class="logo">
+                <a href="#"> <img src="logo.png"></a>
+            </div>
+            <div class="user">
+                <div class="image"><a href="#" class="user_profile_link"><img src="user.png" class="user_profile_link"><div class="userNameText"></div></a></div>
+                <div class="dropdown" style="display: none;">
+                    <ul class="registered" >
+                        <li><a href="javascript:void(0)" class="sign_out">Sign Out</a></li>
+                    </ul>
+                    <ul class="not_registered">
+                        <li><a href="javascript:void(0)" class="sign_in">Sign In</a></li>
+                        <li><a href="javascript:void(0)" class="register">Register</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <nav class="navigation">
+        <div class="wrapper">
+            <div class="actions">
+                <ul>
+                    <li><a href = "javascript:void(0)" onclick="createNewFile()"><img src="new_file.png"> New File</a></li>
+                    <li><a href = "javascript:void(0)" onclick="saveFile()"><img src="save.png"> SAVE</a></li>
+                    <li><a href = "#" id="compileButton"><img src="compile.png" > COMPILE</a></li>
+                    <li style="border-right: none; margin-right: 30px;"><a href = "#" onclick="clearEditor()"><img src="brush.png"> CLEAR</a></li>
+                    <li style="border-right: none;"><a href = "#" onclick="editor.undo()"><img src="undo.png"> UNDO</a></li>
+                    <li style="border-right: none;"><a href = "#" onclick="editor.redo()"><img src="redo.png"> REDO</a></li>
+                    <li style="border-right: none;"><a href = "#" onclick="editor.setFontSize(editor.getFontSize() + 2)"><img src="plus.png"> ZOOM IN</a></li>
+                    <li style="border-right: none;"><a href = "#" onclick="editor.setFontSize(editor.getFontSize() - 2)"><img src="minus.png"> ZOOM OUT</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="editorFrame">
+        <div class="filesCol">
+            <div class="heading">Saved Files</div>
+            <div class="files">
+                <div class="loading" style="display: none; z-index: 5;position: absolute; top: calc(25vh - 134px/2); left: calc(20%/2 - 50px);">
+                    <div class="gear">
+                        <img src="loading_gear.gif">
+                        <div class="text">
+                            Loading...
+                        </div>
+                    </div>
+                </div>
+                <div class="fileList"> 
+                </div>
+                <div class="dontHaveFile" style="margin: 5px;">
+                    You don't any file.
+                </div>
+            </div>
+        </div>
+        <div class="editorMainText">
+            <div class="names">
+                (untitled)
+            </div>
+<div id="editor" file-id="0">
+#include "iostream"
+using namespace std;
+
+int main (){
+    cout << "Hello World";
+}
+</div>
+    </div>
+        </div>
+<pre class="sampleCode" style="display: none;">#include "iostream"
+using namespace std;
+
+int main (){
+    
+}
+</pre>
+
+<pre id = "console"></pre>
+
+
+<script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="src-noconflict/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="jquery-1.10.2.js"></script> 
+<script>
+    var defaultEditorValue = document.querySelector("#editor").innerHTML;
+    //Initialize code editor
+    ace.require("ace/ext/language_tools"); // intellisense
+    var editor = ace.edit("editor"); // editor div
+    //editor.setTheme("ace/theme/eclips"); // Theme
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: true
+    });
+    
+    editor.session.setMode("ace/mode/c_cpp"); // Set Language
+    function onlyExec(){
+        document.querySelector(".messageWindow").style.display = "block";
+        $.post("http://localhost/compiler/only_exec.php", {inputs: sessionStorage.terminalInputs}, function(data){
+            //Manipulate responce data
+            //$("#console").text(data);
+
+            term.reset();
+            term.write(data);
+            term.write('\r\n$ ');
+            document.querySelector(".messageWindow").style.display = "none";
+        });
+    }
+    function sendForExec(){
+        //alert("laksdjf");
+        document.querySelector(".messageWindow").style.display = "block";
+        $.post("http://localhost/compiler/execTest.php", {code: editor.getValue(), input: sessionStorage.terminalInputs}, function(data){
+            //Manipulate responce data
+            //$("#console").text(data);
+
+            term.reset();
+            term.write(data);
+            term.write('\r\n$ ');
+            document.querySelector(".messageWindow").style.display = "none";
+        });
+    }
+    // Do a post request
+    $('#compileButton').click(function(){
+        sessionStorage.terminalInputs = "";
+        sendForExec();
+    });
+</script>
+<style>
+.xterm-screen{
+    width: auto !important;
+    height: auto !important;
+}
+</style>
+<script>
+    var isFirstTime = true;
+    //terminal library
+    var term = new Terminal();
+    term.open(document.getElementById('console'));
+    //term.fit();
+    function runTerminal() {
+        var input = "";
+        if (term._initialized) {
+            return;
+        }
+      
+        term._initialized = true;
+
+        term.prompt = () => {
+            //new entered input can be used here
+
+            //session newly entered input
+            sessionStorage.terminalInputs += input + ",";
+            //compile code according to newly entered input
+            if (!isFirstTime){
+                onlyExec();
+            }
+            isFirstTime = false;
+            //reset or clear all prev text
+            term.reset();
+
+            term.write('\r\n$ ');
+            
+            //Empty input
+            input = "";
+        };
+
+        term.prompt();
+        // whenever a keydown event occures
+        term.on('key', function(key, ev) {
+            const printable = !ev.altKey && !ev.altGraphKey && !ev.ctrlKey && !ev.metaKey;
+            //write newly entered key to input 
+            input += key;
+
+            if (ev.keyCode === 13) {
+                term.prompt();
+            } else if (ev.keyCode === 8) {
+                // Do not delete the prompt
+                if (term.x > 2) {
+                    term.write('\b \b');
+                }
+            } else if (printable) {
+                term.write(key);
+            }
+        });
+    }
+    runTerminal();
+    
+    term.resize(100, 5)  
+</script>
+
+
+<script>
+
+    $(document).ready(function (e){
+        if (sessionStorage.name != undefined){
+            //session available
+            $(".not_registered").css("display", "none");
+            setNavigationProfile();
+            showSavedFiles();
+        }else{
+            // no session is available
+            $(".registered").css("display", "none");
+        }
+    });
+    // on click sign in, sign out and register
+    $(".sign_in").click(function signIn(e){
+        showWindow("Sign In", "Enter email and passwrod:", "http://localhost/compiler/ajaxData.php", {data: "sign_in"});
+    });
+    $(".register").click(function signIn(e){
+        showWindow("Register", "Enter your email and passwrod below:", "http://localhost/compiler/ajaxData.php", {data: "register"});
+    });
+    $(".sign_out").click(function (e){
+        sessionStorage.clear();
+        setProfileDrowdown();
+        createNewFile();
+        showSavedFiles();
+        showWindow("Logging Out", "You are logging out of our system.", "", true);
+        setTimeout(() => {
+            closeWindow();
+        }, 2000);
+    });
+    function register(){
+        var mail = document.querySelector("[name='email']").value;
+        var pass = document.querySelector("[name='pass']").value;
+        var username = document.querySelector("[name='username']").value;
+        if (mail == "" || pass == "" || username == ""){
+            showNotification("Please fill all required input boxes!");
+        }else{
+            $.ajax({
+                type: "POST",
+                url: "http://localhost/compiler/register.php",
+                async: false,
+                data: {name: username, mail: mail, pass: pass},
+                success: function (responceData){
+                    responceArray = JSON.parse(responceData);
+                    if (responceArray.status == 'success'){
+                        closeWindow();
+                        showWindow("Registered!", "You are successfully registered!", "", "");
+                        setTimeout(closeWindow, 2000);
+                    }else if (responceArray.status == 'failure'){
+                        showNotification("Error: " + responceArray.message);
+                    }else{
+                        showNotification("You have run into some unknown problems");
+                    }
+                }
+            });
+        }
+    }
+    // on click sign in button
+    function validateSignInCred(){
+        var mail = document.querySelector("[name='email']").value;
+        var pass = document.querySelector("[name='pass']").value;
+        $(".responceContent").css("display", "block");
+        $(".responceContent").addClass("green");
+        $(".responceContent").text("Loging you in!");
+        $.ajax({
+            type: "POST",
+            url: "http://localhost/compiler/sign_in.php",
+            async: false,
+            data: {mail: mail, pass: pass},
+            success: function (responceData){
+                var responceArray = JSON.parse(responceData);
+                if (responceArray.responce == "success"){
+                    //show green responce
+                    $(".responceContent").css("display", "block");
+                    $(".responceContent").addClass("green");
+                    $(".responceContent").text("You are successfully loged in!");
+                    $(".form").css("display", "none");
+                    //remove the windows
+                    setTimeout(closeWindow, 2000);
+                    setSession(responceArray.name, responceArray.ID);
+                    setNavigationProfile(responceArray.name);
+                    setProfileDrowdown();
+                    showSavedFiles();
+                }else{
+                    // show red responce and don't remove windows
+                    $(".responceContent").css("display", "block");
+                    $(".responceContent").addClass("red");
+                    $(".responceContent").text(responceData);
+                }
+            }
+        });
+    }
+    function createNewFile(){
+        document.querySelector("#editor").setAttribute("file-id", "0");
+        document.querySelector("#editor").removeAttribute("file-name");
+        document.querySelector(".editorMainText .names").innerHTML = "(Untitled)";
+        clearEditor();
+        editor.setValue(document.querySelector(".sampleCode").innerHTML);
+    }
+    function saveFile(){
+        if (sessionStorage.id == undefined){
+            showNotification("Guests are not allowed to save files");
+        }else if (document.querySelector("#editor").getAttribute("file-id") == 0){
+            showWindow("Save File", "Enter file name:", "http://localhost/compiler/ajaxData.php", {data: "file_name"});
+        }else{
+            submitFile(document.querySelector("#editor").getAttribute("file-name"));
+        }
+    }
+    function showNotification(notifiText){
+        document.querySelector(".notification").innerText = notifiText;
+        document.querySelector(".notification").style.display = "block";
+        setTimeout(function(){
+            document.querySelector(".notification").style.display = "none";
+        }, 2000);
+    }
+    //showNotification();
+    function submitFile(fileNmae = document.querySelector("[name='file_name']").value){
+        var fileid = document.querySelector("#editor").getAttribute("file-id");
+        var userID = sessionStorage.id;
+        var fileContent = editor.getValue();
+        $.ajax({
+            type: "POST",
+            url: "http://localhost/compiler/saveFile.php",
+            async: false,
+            data: {
+                id: fileid,
+                name: fileNmae,
+                data: fileContent,
+                userID: userID
+            },
+            success: function (responceData){
+                
+                JSONResponce = JSON.parse(responceData);
+                if (JSONResponce.status == "success"){
+                    showNotification("File successfully saved!");
+                    $(".responceContent").css("display", "block");
+                    $(".responceContent").addClass("green");
+                    $(".responceContent").text(JSONResponce.message);
+                    $(".form").css("display", "none");
+                    document.querySelector("#editor").setAttribute("file-id", JSONResponce.fileID);
+                    document.querySelector("#editor").setAttribute("file-name", fileNmae);
+                    document.querySelector(".editorMainText .names").innerHTML = fileNmae;
+                    setTimeout(closeWindow, 2000);
+                    showSavedFiles();
+                }else if (JSONResponce.status == "failure"){
+                    showNotification(JSONResponce.message);
+                }else{
+                    $(".responceContent").css("display", "block");
+                    $(".responceContent").addClass("red");
+                    $(".responceContent").text(JSONResponce.message);
+                }
+            }
+        });
+    }
+    function showSavedFiles(){
+        if (sessionStorage.id != undefined){
+
+            var outputHTML = "<ul>";
+            document.querySelector(".filesCol .loading").style.display = "block";
+            
+            $.ajax({
+                type: "POST",
+                url: "http://localhost/compiler/show_files.php",
+                async: false,
+                data: {ID: sessionStorage.id},
+                success: function (responceData){
+                    console.log(responceData);
+                    JSONResponce = JSON.parse(responceData);
+                    for (var key in JSONResponce){
+                        if (key != "size")
+                            outputHTML += "<li class=\"contextMenuArea\"><img src=\"cpp.png\"><div class=\"fileName\" date-time=\""+JSONResponce[key]+"\">"+key+".c</div></li>";
+                    }
+                }
+            });
+            outputHTML += "</div>";
+    
+            document.querySelector(".filesCol .loading").style.display = "none";
+            if (JSONResponce['size'] > 0){
+                document.querySelector(".dontHaveFile").style.display = "none";
+            }
+            document.querySelector(".fileList").innerHTML = outputHTML;
+            generateContextMenu();
+        }else{
+            document.querySelector(".fileList").innerHTML = "";
+            document.querySelector(".filesCol .loading").style.display = "none";
+            //editor.setValue = defaultEditorValue;
+            document.querySelector(".dontHaveFile").style.display = "block";            
+        }
+    }
+    function clearEditor(){
+        editor.setValue("");
+    }
+    function validateDelete(){
+        showWindow("Delete file?", "You file will be deleted permanently. <br> Are you sure to perform this action? <br>", "http://localhost/compiler/ajaxData.php", {data: "confirm_delete"});
+    }
+    function deleteFile(){
+        name = document.querySelector(".contextMenu").getAttribute("name");
+        userID = sessionStorage.id;
+        $.ajax({
+            type: "POST",
+            url: "http://localhost/compiler/deleteFile.php",
+            async: false,
+            data: {
+                userID: userID,
+                name: name
+            },
+            success: function (responceData){
+                var responceArray = JSON.parse(responceData);
+                if (responceArray.status == 'success'){
+                    showNotification("File is successfully deleted!");
+                    closeWindow();
+                    createNewFile();
+                    showSavedFiles();
+                }else{
+                    showNotification("Error deleting file!");
+                    closeWindow();
+                    showSavedFiles();
+                }
+            }
+        });
+    }
+    function openFile(){
+        name = document.querySelector(".contextMenu").getAttribute("name");
+        userID = sessionStorage.id;
+        $.ajax({
+            type: "POST",
+            url: "http://localhost/compiler/open_file.php",
+            async: false,
+            data: {
+                userID: userID,
+                fileName: name
+            },
+            success: function (responceData){
+                var responceArray = JSON.parse(responceData);
+                editor.setValue(responceArray.data);
+                document.querySelector(".editorMainText .names").innerHTML = name;
+                document.querySelector("#editor").setAttribute("file-id", responceArray.id);
+                document.querySelector("#editor").setAttribute("file-name", name);
+            }
+        });
+    }
+
+    function showProperties(){
+        name = document.querySelector(".contextMenu").getAttribute("name");
+        date = document.querySelector(".contextMenu").getAttribute("date");
+        showWindow("Properties", "Name: "+name+"<br>Created on: "+date+"<br>", "");
+    }
+
+    function wait(ms) {
+        var start = Date.now(),
+            now = start;
+        while (now - start < ms) {
+        now = Date.now();
+        }
+    }
+    function setNavigationProfile(name = sessionStorage.name, writeName = true){
+        if (writeName == true){
+            $("img.user_profile_link").css("height", "17px");
+            $(".userNameText").text(name);
+        }else{
+            $("img.user_profile_link").css("height", "36px");
+            $(".userNameText").text("");
+        }
+    }
+    function setProfileDrowdown(){
+        if (sessionStorage.name != undefined){
+            //session available
+            $(".not_registered").css("display", "none");
+            $(".registered").css("display", "block");
+        }else{
+            // no session is available
+            $(".not_registered").css("display", "block");
+            $(".registered").css("display", "none");
+            setNavigationProfile(null, false);
+        }
+    }
+    function setSession(name, id){
+        sessionStorage.name = name;
+        sessionStorage.id = id;
+    }
+    function closeWindow(){
+        $("#windows").remove();
+    }
+    function showWindow(title, description, contentURL, paremeters, loadingBar = false){
+        var windowHTML = "<div class=\"messageWindow\" id = 'windows'><div class=\"title_close\"><div class=\"title\">"+title+"</div><div class=\"closeButton\"><a href=\"javascript:void(0)\" onclick=\"closeWindow()\">X</a></div></div><div class=\"paragraph\">"+description+"</div>";
+        if (contentURL != ""){
+            $.ajax({
+                type: "GET",
+                url: contentURL,
+                async: false,
+                data: paremeters,
+                success: function (responceData){
+                    windowHTML += responceData;
+                }
+            });
+        }
+
+        if (loadingBar == true){
+            windowHTML += "<div class=\"loadingBar\"><img src=\"loading.gif\"><div class=\"loadingText\">Performing Action...</div></div></div>";
+        }else{
+            windowHTML += "</div>";
+        }
+        $(document.body).append(windowHTML);
+    }
+    //dropdown menu for profile
+    $(document).click(function (e){
+        console.log(e);
+        if (e.currentTarget.activeElement.className != "user_profile_link"){
+            if (document.querySelector(".user .dropdown").style.display != "none"){
+                document.querySelector(".user .dropdown").style.display = "none";
+            } 
+        }else{
+            $('.user .dropdown').css("display", "block");
+        }
+    });
+    //set context menu class name
+    var element = ".contextMenu";
+    function toggle(element, left, top){
+        if (element.style.display != "none"){
+            element.style.display = "none";
+        }else{
+            element.style.display = "block";
+            setPosition (left, top, element);
+        }
+    }
+    function setPosition (left, top, element){
+        element.style.left = left + "px";
+        element.style.top = top + "px";
+    }
+    function click(e, element){
+        var element = document.querySelector(element);
+        if (element.style.display != "none"){
+            element.style.display = "none";
+        }
+    }
+    function showContextMenu(e){
+        e.preventDefault();
+            
+        var contextMenu = document.querySelector(element);
+        if (contextMenu.style.display != "none"){
+            // already displaying
+            setPosition(e.pageX, e.pageY, contextMenu);
+        }else{
+            // not displaying
+            toggle(document.querySelector(element), e.pageX, e.pageY);
+            contextMenu.setAttribute("name", e.currentTarget.children[1].innerText,);
+            contextMenu.setAttribute("date", e.currentTarget.children[1].getAttribute("date-time"));
+        }
+    }
+    
+    window.addEventListener("click", e => {
+        click(e, element);
+    });
+    function generateContextMenu(){
+        document.querySelectorAll(".contextMenuArea").forEach(element => {
+            element.oncontextmenu = showContextMenu;
+        });
+    }
+    //document.querySelectorAll(".contextMenuArea").oncontextmenu = showContextMenu;
+</script>
+    
+</body>
+</html>
