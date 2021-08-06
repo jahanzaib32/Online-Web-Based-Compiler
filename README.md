@@ -32,7 +32,7 @@ It is important to change credentials for the database. Just edit variables in `
 
 <br>
 
-I built this project a long time ago (in hurry)... Files were scattered, now I put them in single folder. If anyone wishes to work on this project send a pull request with proper folder structure.
+I built this project a long time ago (in hurry)... Files were scattered, now I put them in single folder. If anyone worked (upgraded) this project just send a push request with proper folder structure.
 
 <br>
 
